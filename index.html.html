@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Sliders</title>
+</head>
+<body>
+    <div id="sliders" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 40px;"></div>
+    <script>
+        const sliderData = [
+            { label: 'Track', color: 'green', gradient: 'linear-gradient(to right, green 60%, pink 60%)', track: true },
+            { label: 'Divisor', color: 'blue', ticks: true },
+            { label: 'Thumb', color: 'red', triangle: true },
+            { label: 'Tick', color: 'blue', manyTicks: true }
+        ];
+
+        function createSlider(data) {
+            const container = document.createElement('div');
+            container.style.position = 'relative';
+            container.style.width = '400px';
+
+            const label = document.createElement('div');
+            label.innerText = data.label;
+            label.style.marginBottom = '10px';
+            container.appendChild(label);
+
+            const track = document.createElement('div');
+            track.style.width = '100%';
+            track.style.height = '6px';
+            track.style.position = 'relative';
+            track.style.borderRadius = '3px';
+            track.style.background = data.gradient || 'lightgray';
+            container.appendChild(track);
+
+            const valueDisplay = document.createElement('div');
+            valueDisplay.style.position = 'absolute';
+            valueDisplay.style.top = '-25px';
+            valueDisplay.style.left = '60%';
+            valueDisplay.style.transform = 'translateX(-50%)';
+            valueDisplay.style.fontWeight = 'bold';
+            valueDisplay.innerText = '60';
+            if (data.track) track.appendChild(valueDisplay);
+
+            const thumb = document.createElement('div');
+            thumb.style.width = '20px';
+            thumb.style.height = '20px';
+            thumb.style.position = 'absolute';
+            thumb.style.top = '-7px';
+            thumb.style.borderRadius = data.triangle ? '0' : '50%';
+            thumb.style.clipPath = data.triangle ? 'polygon(50% 0%, 100% 100%, 0% 100%)' : 'none';
+            thumb.style.backgroundColor = data.color;
+            thumb.style.cursor = 'pointer';
+            thumb.style.left = '60%';
+            track.appendChild(thumb);
+
+            if (data.ticks || data.manyTicks) {
+                const ticks = document.createElement('div');
+                ticks.style.position = 'absolute';
+                ticks.style.top = '15px';
+                ticks.style.width = '100%';
+                ticks.style.display = 'flex';
+                ticks.style.justifyContent = 'space-between';
+                let tickCount = data.manyTicks ? 20 : 10;
+                for (let i = 0; i < tickCount; i++) {
+                    const tick = document.createElement('div');
+                    tick.style.width = '2px';
+                    tick.style.height = '10px';
+                    tick.style.backgroundColor = 'black';
+                    ticks.appendChild(tick);
+                }
+                track.appendChild(ticks);
+            }
+
+            let dragging = false;
+            thumb.addEventListener('mousedown', () => dragging = true);
+            document.addEventListener('mouseup', () => dragging = false);
+            document.addEventListener('mousemove', (event) => {
+                if (dragging) {
+                    const rect = track.getBoundingClientRect();
+                    let newLeft = event.clientX - rect.left;
+                    newLeft = Math.max(0, Math.min(newLeft, rect.width));
+                    const percent = Math.round((newLeft / rect.width) * 100);
+                    thumb.style.left = `${percent}%`;
+                    if (data.track) valueDisplay.innerText = percent;
+                }
+            });
+
+            return container;
+        }
+
+        const sliderContainer = document.getElementById('sliders');
+        sliderData.forEach(data => sliderContainer.appendChild(createSlider(data)));
+    </script>
+</body>
+</html>
