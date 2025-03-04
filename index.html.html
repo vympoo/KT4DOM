@@ -1,96 +1,498 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Custom Sliders</title>
 </head>
+
 <body>
-    <div id="sliders" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 40px;"></div>
+
+    <div id="sliders-container">
+        <div id="slider-container">
+            <label id="track-label">Track</label>
+            <div id="track">
+                <div id="thumb"></div>
+            </div>
+            <div class="tick" id="tick-0">0</div>
+            <div class="tick" id="tick-20">20</div>
+            <div class="tick" id="tick-40">40</div>
+            <div class="tick" id="tick-60">60</div>
+            <div class="tick" id="tick-80">80</div>
+            <div class="tick" id="tick-100">100</div>
+        </div>
+
+        <div id="divisor-slider-container">
+            <label id="divisor-track-label">Divisor</label>
+            <div id="divisor-track">
+                <div id="divisor-thumb"></div>
+            </div>
+        </div>
+
+        <div id="thumb-slider-container">
+            <label id="thumb-track-label">Thumb</label>
+            <div id="thumb-track">
+                <div id="thumb-slider-thumb"></div>
+            </div>
+        </div>
+
+        <div id="tick-slider-container">
+            <label id="tick-track-label">Tick</label>
+            <div id="tick-track">
+                <div id="tick-slider-thumb"></div>
+            </div>
+        </div>
+    </div>
+
+
     <script>
-        const sliderData = [
-            { label: 'Track', color: 'green', gradient: 'linear-gradient(to right, green 60%, pink 60%)', track: true },
-            { label: 'Divisor', color: 'blue', ticks: true },
-            { label: 'Thumb', color: 'red', triangle: true },
-            { label: 'Tick', color: 'blue', manyTicks: true }
-        ];
+        // Create and append the stylesheet dynamically
+        const style = document.createElement('style');
+        document.head.appendChild(style);
+        style.sheet.insertRule(`
+    #sliders-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 600px; /* Double width for larger sliders */
+        margin: 50px auto; /* Center the whole container */
+    }
+    `, 0);
 
-        function createSlider(data) {
-            const container = document.createElement('div');
-            container.style.position = 'relative';
-            container.style.width = '400px';
+        style.sheet.insertRule(`
+    #slider-container {
+        width: 600px; /* Double the original width */
+        margin: 20px 0; /* Remove auto margin, set to 0 */
+        position: relative;
+    }
+  `, 1);
+        style.sheet.insertRule(`
+    #track {
+      width: 100%;
+      height: 16px; /* Double height */
+      background: linear-gradient(to right, 
+        #00b050 0%, 
+        #00b050 60%, 
+        rgba(0,176,80,0.5) 60%,
+        rgba(0,176,80,0.5) 80%,
+        #f08080 80%,
+        #f08080 100%
+      );
+      border-radius: 8px; /* Double border-radius */
+      position: relative;
+    }
+  `, 2);
+        style.sheet.insertRule(`
+    #thumb {
+      width: 40px; /* Double width */
+      height: 40px; /* Double height */
+      background-color: #00b050;
+      border-radius: 50%;
+      position: absolute;
+      top: -12px; /* adjust to center thumb vertically */
+      left: 58%;
+      cursor: pointer;
+      z-index: 2;
+    }
+  `, 3);
+        style.sheet.insertRule(`
+    .tick {
+      position: absolute;
+      bottom: -30px; /* adjust position */
+      font-size: 18px; /*increase size */
+      color: #333;
+    }
+  `, 4);
+        style.sheet.insertRule(`#tick-0 { left: 0; }`, 5);
+        style.sheet.insertRule(`#tick-20 { left: calc(20% - 10px); }`, 6);
+        style.sheet.insertRule(`#tick-40 { left: calc(40% - 10px); }`, 7);
+        style.sheet.insertRule(`#tick-60 { left: calc(60% - 10px); }`, 8);
+        style.sheet.insertRule(`#tick-80 { left: calc(80% - 10px); }`, 9);
+        style.sheet.insertRule(`#tick-100 { left: calc(100% - 20px); }`, 10);
+        style.sheet.insertRule(`#track-label {
+    text-align: left;
+    margin-bottom: 5px;
+    display: block;
+    font-size: 20px;
+  }`, 11);
 
-            const label = document.createElement('div');
-            label.innerText = data.label;
-            label.style.marginBottom = '10px';
-            container.appendChild(label);
+        // Styles for the Divisor Slider
+        style.sheet.insertRule(`
+    #divisor-slider-container {
+        width: 600px; /* Double the original width */
+        margin: 20px 0;
+        position: relative;
+    }
+  `, 12);
 
-            const track = document.createElement('div');
-            track.style.width = '100%';
-            track.style.height = '6px';
-            track.style.position = 'relative';
-            track.style.borderRadius = '3px';
-            track.style.background = data.gradient || 'lightgray';
-            container.appendChild(track);
+        style.sheet.insertRule(`
+    #divisor-track {
+      width: 100%;
+      height: 8px; /* Double height */
+      background: linear-gradient(to right, 
+        #1E90FF 0%, /* DodgerBlue - full color */
+        #1E90FF var(--divisor-thumb-position, 50%), /* solid blue up to thumb */
+        rgba(30, 144, 255, 0.3) var(--divisor-thumb-position, 50%), /* faded blue begins */
+        rgba(30, 144, 255, 0.3) 100% /* faded blue to end */
+      );
+      border-radius: 4px; /*Double border radius*/
+      position: relative;
+    }
+  `, 13);
 
-            const valueDisplay = document.createElement('div');
-            valueDisplay.style.position = 'absolute';
-            valueDisplay.style.top = '-25px';
-            valueDisplay.style.left = '60%';
-            valueDisplay.style.transform = 'translateX(-50%)';
-            valueDisplay.style.fontWeight = 'bold';
-            valueDisplay.innerText = '60';
-            if (data.track) track.appendChild(valueDisplay);
+        style.sheet.insertRule(`
+  #divisor-track::before {
+    content: '';
+    position: absolute;
+    top: -4px; /* Adjust as needed */
+    left: 0;
+    width: 100%;
+    height: 16px; /* Double height */
+    display: flex;
+    justify-content: space-between;
+  }
+  `, 14);
 
-            const thumb = document.createElement('div');
-            thumb.style.width = '20px';
-            thumb.style.height = '20px';
-            thumb.style.position = 'absolute';
-            thumb.style.top = '-7px';
-            thumb.style.borderRadius = data.triangle ? '0' : '50%';
-            thumb.style.clipPath = data.triangle ? 'polygon(50% 0%, 100% 100%, 0% 100%)' : 'none';
-            thumb.style.backgroundColor = data.color;
-            thumb.style.cursor = 'pointer';
-            thumb.style.left = '60%';
-            track.appendChild(thumb);
+        style.sheet.insertRule(`
+  #divisor-track::before {
+      background: linear-gradient(to right, 
+          #1E90FF 0%, #1E90FF 2%,
+          transparent 2%, transparent 4%,
+          #1E90FF 4%, #1E90FF 6%,
+          transparent 6%, transparent 8%,
+          #1E90FF 8%, #1E90FF 10%,
+          transparent 10%, transparent 12%,
+          #1E90FF 12%, transparent 14%,
+          transparent 14%, transparent 16%,
+          #1E90FF 16%, transparent 18%,
+          transparent 18%, transparent 20%,
+          #1E90FF 20%, transparent 22%,
+          transparent 22%, transparent 24%,
+          #1E90FF 24%, transparent 26%,
+          transparent 26%, transparent 28%,
+          #1E90FF 28%, transparent 30%,
+          transparent 30%, transparent 32%,
+           transparent 32%, transparent 34%,
+          transparent 34%, transparent 36%,
+           transparent 36%, transparent 38%,
+          transparent 38%, transparent 40%,
+          transparent 40%, transparent 42%,
+          transparent 42%, transparent 44%,
+           transparent 44%, transparent 46%,
+          transparent 46%, transparent 48%,
+          transparent 48%, transparent 50%,
+          transparent 50%, transparent 52%,
+           transparent 52%, transparent 54%,
+          transparent 54%, transparent 56%,
+          transparent 56%, transparent 58%,
+          transparent 58%, transparent 60%,
+          transparent 60%, transparent 62%,
+          transparent 62%, transparent 64%,
+          transparent 64%, transparent 66%,
+          transparent 66%, transparent 68%,
+           transparent 68%, transparent 70%,
+          transparent 70%, transparent 72%,
+          transparent 72%, transparent 74%,
+          transparent 74%, transparent 76%,
+          transparent 76%, transparent 78%,
+          transparent 78%, transparent 80%,
+           transparent 80%, transparent 82%,
+          transparent 82%, transparent 84%,
+           transparent 84%, transparent 86%,
+          transparent 86%, transparent 88%,
+          transparent 88%, transparent 90%,
+          transparent 90%, transparent 92%,
+           transparent 92%, transparent 94%,
+          transparent 94%, transparent 96%,
+          transparent 96%, transparent 98%,
+          transparent 98%, transparent 100%
+      );
+      background-size: 6px 16px; /*Smaller size*/
+  }`, 15);
+        style.sheet.insertRule(`
+    #divisor-thumb {
+      width: 32px; /* Double width */
+      height: 32px; /* Double height */
+      background-color: #1E90FF;
+      border-radius: 50%;
+      position: absolute;
+      top: -12px; /* adjust position */
+      left: 50%; /* Start in the middle */
+      cursor: pointer;
+      z-index: 2;
+    }
+  `, 16);
 
-            if (data.ticks || data.manyTicks) {
-                const ticks = document.createElement('div');
-                ticks.style.position = 'absolute';
-                ticks.style.top = '15px';
-                ticks.style.width = '100%';
-                ticks.style.display = 'flex';
-                ticks.style.justifyContent = 'space-between';
-                let tickCount = data.manyTicks ? 20 : 10;
-                for (let i = 0; i < tickCount; i++) {
-                    const tick = document.createElement('div');
-                    tick.style.width = '2px';
-                    tick.style.height = '10px';
-                    tick.style.backgroundColor = 'black';
-                    ticks.appendChild(tick);
-                }
-                track.appendChild(ticks);
+        style.sheet.insertRule(`#divisor-track-label {
+    text-align: left;
+    margin-bottom: 5px;
+    display: block;
+    font-size: 20px;
+  }`, 17);
+
+
+        // Styles for the Thumb Slider (New Red Slider)
+        style.sheet.insertRule(`
+    #thumb-slider-container {
+        width: 600px; /* Double the original width */
+        margin: 20px 0;
+        position: relative;
+    }
+  `, 18);
+
+        style.sheet.insertRule(`
+    #thumb-track {
+      width: 100%;
+      height: 12px; /* Double height */
+      background: linear-gradient(to right,
+        #FF0000 0%,
+        #FF0000 var(--thumb-slider-thumb-position, 0%),
+        rgba(255, 0, 0, 0.3) var(--thumb-slider-thumb-position, 0%),
+        rgba(255, 0, 0, 0.3) 100%
+      );
+      border-radius: 6px; /* Double border radius */
+      position: relative;
+    }
+  `, 19);
+
+        style.sheet.insertRule(`
+  #thumb-track::after {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: 0;
+    width: 100%;
+    height: 16px; /* Double height */
+    background-size: 20px 20px;
+    background-repeat: repeat-x;
+    background-position: right;
+    background-image: radial-gradient(circle, rgba(255, 0, 0, 0.4) 4px, transparent 4px);
+}`, 20);
+
+
+        style.sheet.insertRule(`
+    #thumb-slider-thumb {
+      width: 0;
+      height: 0;
+      border-left: 16px solid transparent; /* Double width */
+      border-right: 16px solid transparent; /* Double width */
+      border-bottom: 32px solid red; /* Double height */
+      position: absolute;
+      top: -20px; /* adjust position */
+      left: 0%; /* Initial Position */
+      cursor: pointer;
+      z-index: 2;
+    }
+  `, 21);
+
+        style.sheet.insertRule(`#thumb-track-label {
+    text-align: left;
+    margin-bottom: 5px;
+    display: block;
+    font-size: 20px;
+  }`, 22);
+
+
+        // Styles for the Tick Slider (New Blue Slider with Ticks)
+        style.sheet.insertRule(`
+    #tick-slider-container {
+        width: 600px; /* Double the original width */
+        margin: 20px 0;
+        position: relative;
+    }
+  `, 23);
+
+        style.sheet.insertRule(`
+    #tick-track {
+      width: 100%;
+      height: 8px; /*Double height*/
+      background: linear-gradient(to right,
+        #56B4E9 0%,
+        #56B4E9 var(--tick-slider-thumb-position, 0%),
+        rgba(220,220,220,0.5) var(--tick-slider-thumb-position, 0%),
+        rgba(220,220,220,0.5) 100%
+      );
+      border-radius: 4px; /* Double border radius */
+      position: relative;
+    }
+  `, 24);
+
+        style.sheet.insertRule(`
+  #tick-track::before {
+    content: '';
+    position: absolute;
+    bottom: auto;
+    top: -30px;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    height: 20px;
+  }
+`, 25);
+
+style.sheet.insertRule(`
+  #tick-track::before {
+    background: repeating-linear-gradient(
+      90deg,
+      #56B4E9,
+      #56B4E9 1px, /* Thinner Ticks */
+      transparent 1px,
+      transparent 16.666666%  /* Less frequent = wider spacing */
+    );
+     height: 10px;
+    top: -35px;
+  }
+`, 26);
+
+        style.sheet.insertRule(`
+    #tick-slider-thumb {
+      width: 32px; /*Double Width*/
+      height: 32px; /*Double Height*/
+      background-color: #56B4E9;
+      border-radius: 50%;
+      position: absolute;
+      top: -12px;
+      left: 0%; /* Initial Position */
+      cursor: pointer;
+      z-index: 2;
+    }
+  `, 27);
+
+        style.sheet.insertRule(`#tick-track-label {
+    text-align: left;
+    margin-bottom: 5px;
+    display: block;
+    font-size: 20px;
+  }`, 28);
+
+
+        const track = document.getElementById('track');
+        const thumb = document.getElementById('thumb');
+        const sliderContainer = document.getElementById('slider-container');
+
+        const divisorTrack = document.getElementById('divisor-track');
+        const divisorThumb = document.getElementById('divisor-thumb');
+        const divisorSliderContainer = document.getElementById('divisor-slider-container');
+
+        const thumbSliderTrack = document.getElementById('thumb-track');
+        const thumbSliderThumb = document.getElementById('thumb-slider-thumb');
+        const thumbSliderContainer = document.getElementById('thumb-slider-container');
+
+        const tickSliderTrack = document.getElementById('tick-track');
+        const tickSliderThumb = document.getElementById('tick-slider-thumb');
+        const tickSliderContainer = document.getElementById('tick-slider-container');
+
+
+        let isDragging = false;
+        let isDivisorDragging = false;
+        let isThumbSliderDragging = false;
+        let isTickSliderDragging = false;
+
+        // Existing Slider Logic
+        thumb.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            thumb.style.cursor = 'grabbing'; // change cursor
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            isDivisorDragging = false; // Ensure all released
+            isThumbSliderDragging = false;
+            isTickSliderDragging = false;
+            thumb.style.cursor = 'pointer'; // revert cursor
+            divisorThumb.style.cursor = 'pointer';
+            thumbSliderThumb.style.cursor = 'pointer';
+            tickSliderThumb.style.cursor = 'pointer';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+
+                const containerRect = sliderContainer.getBoundingClientRect();
+                let x = e.clientX - containerRect.left; // x position relative to container
+
+                // Keep thumb within bounds
+                if (x < 0) x = 0;
+                if (x > containerRect.width) x = containerRect.width;
+
+                // Move the thumb
+                thumb.style.left = (x / containerRect.width * 100) + '%';
+
+                //Update the track background (most complex part)
+                const thumbPercent = parseFloat(thumb.style.left);
+                track.style.background = `linear-gradient(to right, 
+        #00b050 0%, 
+        #00b050 ${thumbPercent}%,
+        rgba(0,176,80,0.5) ${thumbPercent}%,
+        #f08080 80%,
+        #f08080 100%)`;
             }
 
-            let dragging = false;
-            thumb.addEventListener('mousedown', () => dragging = true);
-            document.addEventListener('mouseup', () => dragging = false);
-            document.addEventListener('mousemove', (event) => {
-                if (dragging) {
-                    const rect = track.getBoundingClientRect();
-                    let newLeft = event.clientX - rect.left;
-                    newLeft = Math.max(0, Math.min(newLeft, rect.width));
-                    const percent = Math.round((newLeft / rect.width) * 100);
-                    thumb.style.left = `${percent}%`;
-                    if (data.track) valueDisplay.innerText = percent;
-                }
-            });
+            if (isDivisorDragging) {
+                const containerRect = divisorSliderContainer.getBoundingClientRect();
+                let x = e.clientX - containerRect.left;
 
-            return container;
-        }
+                if (x < 0) x = 0;
+                if (x > containerRect.width) x = containerRect.width;
 
-        const sliderContainer = document.getElementById('sliders');
-        sliderData.forEach(data => sliderContainer.appendChild(createSlider(data)));
+                let thumbPercent = (x / containerRect.width * 100);
+
+                divisorThumb.style.left = thumbPercent + '%';
+
+                //Update the --divisor-thumb-position CSS variable
+                divisorTrack.style.setProperty('--divisor-thumb-position', thumbPercent + '%');
+            }
+
+            if (isThumbSliderDragging) {
+                const containerRect = thumbSliderContainer.getBoundingClientRect();
+                let x = e.clientX - containerRect.left;
+
+                if (x < 0) x = 0;
+                if (x > containerRect.width) x = containerRect.width;
+
+                let thumbPercent = (x / containerRect.width * 100);
+
+                thumbSliderThumb.style.left = thumbPercent + '%';
+
+                thumbSliderTrack.style.setProperty('--thumb-slider-thumb-position', thumbPercent + '%');
+            }
+
+            if (isTickSliderDragging) {
+                const containerRect = tickSliderContainer.getBoundingClientRect();
+                let x = e.clientX - containerRect.left;
+
+                if (x < 0) x = 0;
+                if (x > containerRect.width) x = containerRect.width;
+
+                let thumbPercent = (x / containerRect.width * 100);
+
+                tickSliderThumb.style.left = thumbPercent + '%';
+
+                tickSliderTrack.style.setProperty('--tick-slider-thumb-position', thumbPercent + '%');
+            }
+
+        });
+
+
+        // New Divisor Slider Logic
+        divisorThumb.addEventListener('mousedown', (e) => {
+            isDivisorDragging = true;
+            divisorThumb.style.cursor = 'grabbing';
+        });
+
+        // New Thumb Slider Logic
+        thumbSliderThumb.addEventListener('mousedown', (e) => {
+            isThumbSliderDragging = true;
+            thumbSliderThumb.style.cursor = 'grabbing';
+        });
+
+        // New Tick Slider Logic
+        tickSliderThumb.addEventListener('mousedown', (e) => {
+            isTickSliderDragging = true;
+            tickSliderThumb.style.cursor = 'grabbing';
+        });
     </script>
+
 </body>
+
 </html>
